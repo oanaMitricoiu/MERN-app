@@ -10,14 +10,7 @@ const getAddProduct = (req, res, next) => {
 
 const postAddProduct = (req, res, next) => {
     const { title, price, description, imageUrl } = req.body;
-    const product = new Product(
-        title,
-        price,
-        description,
-        imageUrl,
-        null,
-        req.user._id
-    );
+    const product = new Product({ title, price, description, imageUrl });
     product
         .save()
         .then((result) => {
@@ -56,15 +49,14 @@ const postEditProduct = (req, res, next) => {
     const updatedDesc = req.body.description;
     const updatedImageUrl = req.body.imageUrl;
 
-    const product = new Product(
-        updatedTitle,
-        updatedPrice,
-        updatedDesc,
-        updatedImageUrl,
-        prodId
-    );
-    product
-        .save()
+    Product.findById(prodId)
+        .then((product) => {
+            product.title = updatedTitle;
+            product.price = updatedPrice;
+            product.description = updatedDesc;
+            product.imageUrl = updatedImageUrl;
+            return product.save();
+        })
         .then((result) => {
             console.log("Updated product");
             res.redirect("/admin/products");
@@ -73,7 +65,7 @@ const postEditProduct = (req, res, next) => {
 };
 
 const getProducts = (req, res, next) => {
-    Product.fetchAll()
+    Product.find()
         .then((products) => {
             res.render("admin/products", {
                 prods: products,
@@ -85,10 +77,9 @@ const getProducts = (req, res, next) => {
 };
 
 const postDeleteProduct = (req, res, next) => {
-    // ce e productId
     const prodId = req.body.productId;
 
-    Product.deleteById(prodId)
+    Product.findByIdAndDelete(prodId)
         .then(() => {
             console.log("Destroyed product");
 
